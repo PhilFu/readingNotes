@@ -6,7 +6,6 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.stream.Stream;
 
 /**
  * 对于一个指定的File对象数组，首先按照路径的目录排序，然后对每组目录中的元素再按照路径名排序。使用lambda表达式（而不是Comparator）来实现。

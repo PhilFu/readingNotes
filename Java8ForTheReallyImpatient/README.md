@@ -16,3 +16,4 @@
 > 提示：定义一个RunnableEx接口，其run方法可以抛出任何异常。然后实现public static Runnable uncheck(RunnableEx runner)。在uncheck函数中使用一个lambda表达式。
 
 > 为什么你不能直接使用Callable<Void>来代替RunnableEx？
+* 7. 编写一个静态方法andThen，它接受两个Runnable实例作为参数，并返回一个分别运行这两个实例的Runnable对象。在main方法中，向andThen方法传递两个lambda表达式，并返回运行的实例。

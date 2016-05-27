@@ -11,9 +11,11 @@
 * 6. 你是否讨厌在Runnable实现中处理检查异常？编写一个补货所有异常的uncheck方法，再将它改造为不需要检查异常的方法。例如：
 ```
  new Thread(uncheck)
-     () -> { System.out.println("Zzz"); Thread.sleep(1000); })).start();  //看，不需要catch (InterruptedException) !
+     () -> { System.out.println("Zzz"); Thread.sleep(1000); })).start();
+       //看，不需要catch (InterruptedException) !
 ```
 > 提示：定义一个RunnableEx接口，其run方法可以抛出任何异常。然后实现public static Runnable uncheck(RunnableEx runner)。在uncheck函数中使用一个lambda表达式。
 
 > 为什么你不能直接使用Callable<Void>来代替RunnableEx？
+
 * 7. 编写一个静态方法andThen，它接受两个Runnable实例作为参数，并返回一个分别运行这两个实例的Runnable对象。在main方法中，向andThen方法传递两个lambda表达式，并返回运行的实例。

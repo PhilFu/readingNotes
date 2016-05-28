@@ -19,3 +19,13 @@
 > 为什么你不能直接使用Callable<Void>来代替RunnableEx？
 
 * 7. 编写一个静态方法andThen，它接受两个Runnable实例作为参数，并返回一个分别运行这两个实例的Runnable对象。在main方法中，向andThen方法传递两个lambda表达式，并返回运行的实例。
+* 8. 当一个lambda表达式捕获了如下增强for循环中的值时，会发生什么？
+```
+ String[] names = {"Peter", "Paul", "Mary"};
+ List<Runnable> runners = new ArrayList<>();
+ for (String name : names)
+     runners.add( () -> System.out.println(name));
+```
+> 这样做是否合法？每个lambda表达式都捕获了一个不同的值，还是它们都获得了最终的值？如果使用传统的for循环，例如for(int i = 0; i < names.length; i++)，又会发生什么？
+
+* 9. 编写一个继承Collection接口的子接口Collection2， 并添加一个默认方法：void forEachIf(Consumer<T> action, Predicate<T> filter)，用来将action应用到所有filter返回true的元素上。你能够如何使用它？

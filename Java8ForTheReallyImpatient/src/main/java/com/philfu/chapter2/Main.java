@@ -1,6 +1,7 @@
 package com.philfu.chapter2;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.philfu.Exercise;
 import org.junit.Test;
 
@@ -8,10 +9,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -71,6 +69,17 @@ public class Main implements Exercise{
         Optional<String> firstStartQ = words.stream().filter(s -> s.startsWith("Q")).findFirst();
         Optional<String> startWithQ = words.parallelStream().filter(s -> s.startsWith("Q")).findAny();
         boolean hasStartQ = words.parallelStream().anyMatch(s -> s.startsWith("Q"));
+
+        List<String> resultList = Lists.newArrayList();
+        startWithQ.ifPresent(v -> resultList.add(v));
+        startWithQ.ifPresent(resultList::add);
+        Optional<Boolean> added = startWithQ.map(resultList::add);
+        String resultStr = startWithQ.orElse("");
+        String resultStr2 = startWithQ.orElseGet(() -> System.getProperty("user.dir"));
+        String resultStr3 = startWithQ.orElseThrow(NoSuchElementException::new);
+
+        Optional<Double> resultzx = inverse(4.0).flatMap(Main::squareRoot);
+        Optional<Double> resultzx2 = Optional.of(4.0).flatMap(Main::inverse).flatMap(Main::squareRoot);
     }
 
     private void printResult(Object object) {
@@ -87,5 +96,14 @@ public class Main implements Exercise{
             result.add(c);
         }
         return result.stream();
+    }
+
+    private static Optional<Double> inverse(Double x) {
+        Optional.ofNullable(x);
+        return x == 0 ? Optional.empty() : Optional.of(1 / x);
+    }
+
+    private static Optional<Double> squareRoot(Double x) {
+        return x < 0 ? Optional.empty() : Optional.of(Math.sqrt(x));
     }
 }

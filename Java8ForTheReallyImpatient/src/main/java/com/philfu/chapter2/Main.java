@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -80,6 +81,26 @@ public class Main implements Exercise{
 
         Optional<Double> resultzx = inverse(4.0).flatMap(Main::squareRoot);
         Optional<Double> resultzx2 = Optional.of(4.0).flatMap(Main::inverse).flatMap(Main::squareRoot);
+
+        Stream<Integer> values = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        Optional<Integer> sum = values.reduce((x, y) -> x +y);
+        Optional<Integer> sum2 = values.reduce(Integer::sum);
+        Integer sum3 = values.reduce(0, (x, y) -> x + y);
+        int resultA = words.stream().reduce(0, (total, word) -> total + word.length(), (total1, total2) -> total1 + total2);
+        String[] resultB = words.stream().toArray(String[]::new);
+        HashSet<String> resultC = words.stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
+        Set<String> resultD = words.stream().collect(Collectors.toSet());
+        List<String> resultE = words.stream().collect(Collectors.toList());
+        TreeSet<String> resultF = words.stream().collect(Collectors.toCollection(TreeSet<String>::new));
+        HashSet<String> resultG = words.stream().collect(Collectors.toCollection(HashSet<String>::new));
+        String resultH = words.stream().collect(Collectors.joining());
+        String resultI = words.stream().collect(Collectors.joining(", "));
+        String resultJ = words.stream().map(Object::toString).collect(Collectors.joining(", "));
+        IntSummaryStatistics summaryStatistics = words.stream().collect(Collectors.summarizingInt(String::length));
+        double averageWordsLength = summaryStatistics.getAverage();
+        int maxLength = summaryStatistics.getMax();
+        int minLength = summaryStatistics.getMin();
+        words.stream().forEach(System.out::print);
     }
 
     private void printResult(Object object) {

@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -101,6 +102,20 @@ public class Main implements Exercise{
         int maxLength = summaryStatistics.getMax();
         int minLength = summaryStatistics.getMin();
         words.stream().forEach(System.out::print);
+
+        Map<Integer, Integer> resultMap = words.stream().collect(Collectors.toMap(String::length, String::length));
+        Map<Integer, String> resultMap2 = words.stream().collect(Collectors.toMap(String::length, Function.identity()));
+
+        Stream<Locale> locales = Stream.of(Locale.getAvailableLocales());
+        Map<String, String> languageNames = locales.collect(Collectors.toMap(l -> l.getDisplayLanguage(), l -> l.getDisplayLanguage(), (existValue, newValue) -> existValue));
+        Map<String, Set<String>> countryLanuageSets = locales.collect(Collectors.toMap(l -> l.getDisplayCountry(), l -> Collections.singleton(l.getDisplayLanguage()),
+                (a, b) -> {
+                    Set<String> r = new HashSet<>(a);
+                    r.addAll(b);
+                    return r;
+                }));
+
+
     }
 
     private void printResult(Object object) {

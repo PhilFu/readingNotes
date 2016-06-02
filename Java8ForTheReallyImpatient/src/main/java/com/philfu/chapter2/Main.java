@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.*;
+
 /**
  * Created by DeBen on 2016/5/29.
  */
@@ -115,7 +117,14 @@ public class Main implements Exercise{
                     return r;
                 }));
 
+        Map<String, List<Locale>> countryToLocales = locales.collect(Collectors.groupingBy(Locale::getCountry));
+        List<Locale> swissLocale = countryToLocales.get("CH");
+        Map<Boolean, List<Locale>> englishAndOther = locales.collect(Collectors.partitioningBy(l -> l.getLanguage().equals("en")));
+        List<Locale> englistLocales = englishAndOther.get(true);
 
+        Map<String, Set<Locale>> countryToLocaleSet = locales.collect(groupingBy(Locale::getCountry, toSet()));
+        Map<String, Long> countryToLocaleCount = locales.collect(groupingBy(Locale::getCountry, counting()));
+//        Map<String, Long> stateToCityPop = locales.collect(groupingBy(Locale::getCountry, summarizingLong(Locale::hashCode)));
     }
 
     private void printResult(Object object) {

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
@@ -125,6 +126,11 @@ public class Main implements Exercise{
         Map<String, Set<Locale>> countryToLocaleSet = locales.collect(groupingBy(Locale::getCountry, toSet()));
         Map<String, Long> countryToLocaleCount = locales.collect(groupingBy(Locale::getCountry, counting()));
 //        Map<String, Long> stateToCityPop = locales.collect(groupingBy(Locale::getCountry, summarizingLong(Locale::hashCode)));
+
+        IntStream stream = IntStream.of(1, 1, 2, 3, 5);
+        IntStream zeroToNintyNine = IntStream.range(0, 100);
+        IntStream zeroToHundred = IntStream.rangeClosed(0, 100);
+        IntStream lengths = words.stream().mapToInt(String::length);
     }
 
     private void printResult(Object object) {

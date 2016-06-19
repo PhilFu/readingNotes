@@ -29,3 +29,9 @@
 > 这样做是否合法？每个lambda表达式都捕获了一个不同的值，还是它们都获得了最终的值？如果使用传统的for循环，例如for(int i = 0; i < names.length; i++)，又会发生什么？
 
 * 9. 编写一个继承Collection接口的子接口Collection2， 并添加一个默认方法：void forEachIf(Consumer<T> action, Predicate<T> filter)，用来将action应用到所有filter返回true的元素上。你能够如何使用它？
+
+## 第二章  Stream API
+* 1. 编写一个第2.1节中for循环的并行版本。获取处理器的数量，创造出多个独立的线程，每个都只处理列表的一个片段，然后将它们各自的结果汇总起来。（我们不希望这些线程都更新一个计数器，为什么？）
+```
+获取字符串列表中长度大于12的单词的数量。
+```

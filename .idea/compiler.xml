@@ -24,10 +24,25 @@
         <processorPath useClasspath="true" />
         <module name="Java8ForTheReallyImpatient" />
       </profile>
+      <profile default="false" name="Annotation profile for SevenConcurrencyModelsInSevenWeeks" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Annotation profile for ThreadsLocks" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="ThreadsLocks" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="bookReading" target="1.8" />
       <module name="Java8ForTheReallyImpatient" target="1.8" />
+      <module name="SevenConcurrencyModelsInSevenWeeks" target="1.8" />
+      <module name="ThreadsLocks" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -3,6 +3,8 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Java8ForTheReallyImpatient" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/SevenConcurrencyModelsInSevenWeeks" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/SevenConcurrencyModelsInSevenWeeks/ThreadsLocks" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

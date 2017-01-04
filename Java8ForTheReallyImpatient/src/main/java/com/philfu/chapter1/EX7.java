@@ -13,11 +13,10 @@ public class EX7 implements Exercise{
     @Override
     @Test
     public void perform() {
-        Runnable runnable = andThen(() -> {
-            System.out.println("Runnable One is running.");
-        }, () -> {
-            System.out.println("Runnable Two is running");
-        });
+        Runnable runnable = andThen(
+                () -> System.out.println("Runnable One is running."),
+                () -> System.out.println("Runnable Two is running")
+        );
         new Thread(runnable).start();
     }
 

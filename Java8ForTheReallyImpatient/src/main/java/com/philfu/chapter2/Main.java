@@ -53,14 +53,17 @@ public class Main implements Exercise{
         Stream<BigInteger> integerStream = Stream.iterate(BigInteger.ZERO, n -> n.add(BigInteger.ONE));
         Stream<String> wordsFromPattern = Pattern.compile("[\\P{L}]+").splitAsStream("");
         try(Stream<String> lines = Files.lines(Paths.get("/home/"))) {
-            // Stream接口有一个父接口AutoCloseable。当在某个Stream上调用close方法时，底层的文件也会被关闭。为了确保关闭，最好使用 try-with-resources 语句
+            // Stream接口有一个父接口AutoCloseable。当在某个Stream上调用close方法时，底层的文件也会被关闭。
+            // 为了确保关闭，最好使用 try-with-resources 语句
         } catch (IOException e) {
             e.printStackTrace();
         }
         Stream<String> lowercaseWords = words.parallelStream().map(String::toLowerCase);
         Stream<Character> firstChars = words.parallelStream().map(s -> s.charAt(0));
         Stream<Stream<Character>> result = words.stream().map(w -> characterStream(w));
+        Stream<Stream<Character>> result2 = words.stream().map(Main::characterStream);
         Stream<Character> letters = words.stream().flatMap(w -> characterStream(w));
+        Stream<Character> letters2 = words.stream().flatMap(Main::characterStream);
         Stream<Double> limitRandoms = Stream.generate(Math::random).limit(100);
         Stream<Double> skipRandoms = Stream.generate(Math::random).skip(10);
         Stream<Character> combined = Stream.concat(characterStream("Hello"), characterStream("World"));

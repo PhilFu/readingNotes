@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 /**
- * 使用java.io.File类的list(FilenameFilter)方法，编写一个返回指定目录下、具有指定扩展名的所有文件。使用lambda表达式（而不是FilenameFilter）来实现。它会补货闭合作用域中的哪些变量？
+ * 使用java.io.File类的list(FilenameFilter)方法，编写一个返回指定目录下、具有指定扩展名的所有文件。使用lambda表达式（而不是FilenameFilter）来实现。它会捕获闭合作用域中的哪些变量？
  *
  * Created by Phil on 2016/5/23.
  */

@@ -49,3 +49,7 @@ Stream 是lazy的,无法判断?
 ```
 * 8. 编写一个方法 public static <T> Stream<T> zip(Stream<T> first, Stream<T> second),依次调换流first和second中的位置,直到其中一个流结束为止。
 * 9. 将一个Stream<ArrayList<T>>中的全部元素连接为一个ArrayList<T>。试着用三种不同的聚合方法实现
+* 10.编写一个可以用于计算Stream<Double>平均值的聚合方法。为什么不能直接计算出总和再除以count()?
+* 11.我们应该可以将流的结果并发收集到一个ArrayList中,而不是将多个ArrayList合并起来。由于对集合不相交部分的并发操作是线程安全的,所以我们假设这个ArrayList的初始大小即为流的大小。如何能够做到这一点?
+* 12.如第2.13节所示,通过更新一个AtomicInteger数组来计算一个并行Stream<String>宏的所有短单词。使用原子操作方法getAndIncrement来安全地增加每个计算器的值。
+* 13.重复上一个练习,这次使用collect方法、Collectors.groupingBy方法和Collectors.counting方法来过滤出短单词

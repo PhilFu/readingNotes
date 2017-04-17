@@ -90,7 +90,7 @@ public class Main implements Exercise{
         Optional<Double> resultzx2 = Optional.of(4.0).flatMap(Main::inverse).flatMap(Main::squareRoot);
 
         Stream<Integer> values = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        Optional<Integer> sum = values.reduce((x, y) -> x +y);
+        Optional<Integer> sum = values.reduce((x, y) -> x + y);
         Optional<Integer> sum2 = values.reduce(Integer::sum);
         Integer sum3 = values.reduce(0, (x, y) -> x + y);
         int resultA = words.stream().reduce(0, (total, word) -> total + word.length(), (total1, total2) -> total1 + total2);

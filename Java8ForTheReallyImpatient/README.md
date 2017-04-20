@@ -53,3 +53,44 @@ Stream 是lazy的,无法判断?
 * 11.我们应该可以将流的结果并发收集到一个ArrayList中,而不是将多个ArrayList合并起来。由于对集合不相交部分的并发操作是线程安全的,所以我们假设这个ArrayList的初始大小即为流的大小。如何能够做到这一点?
 * 12.如第2.13节所示,通过更新一个AtomicInteger数组来计算一个并行Stream<String>宏的所有短单词。使用原子操作方法getAndIncrement来安全地增加每个计算器的值。
 * 13.重复上一个练习,这次使用collect方法、Collectors.groupingBy方法和Collectors.counting方法来过滤出短单词
+
+## 第三章  使用lambda编程
+* 1. 通过提供有条件的日志语句来加强延迟日志功能。常见调用形式类似于logIf(Level.FINEST, () -> i == 10, () -> "a[10]" = " + a[10").如果logger不会打印日志消息,
+则不需要计算条件语句
+* 2. 当你使用ReentrantLock时,通常需要按照如下形式使用 lock 和 unlock 方法:
+     myLock.lock()
+     try {
+         一些操作
+     } finally {
+         myLock.unlock();
+     }
+     请提供一个可以用于如下形式调用的 withLock 方法:
+     withLock(myLock, () -> { 一些操作 });
+* 3. Java 1.4 通过一个 assert 关键字添加了断言功能。为什么断言没有以库的形式提供? 你能用Java 8 中的功能将它实现成一个库吗?
+* 4. 你能在 Java api 中找到多个名字中带有Filter的函数式接口? 其中哪些可以在 Predicate<T>上添加值?
+* 5. 下面是 ColorTransformer 的具体示例,我们希望在图片周围放置一个frame, 首先实现3.3节的transform方法的一个变体, 它的参数是一个ColorTransformer,
+而不是UnaryOperator<Color>类型,然后使用一个合适的lambda表达式调用它,用10像素,灰色的frame代替边框上的像素
+* 6. 完成3.4节中的方法 public static <T> Image transform(Image image, BiFunction<Color, T> f, T args);
+* 7. 编写一个生成 Comparator<String> 对象的方法,这个比较器可以是正序的、逆序的,大小写敏感的、不敏感的,空格敏感、不敏感的,或者其他任意组合,你的方法应该返回一个lambda表达式
+* 8. 将练习5中的方法更改为一个更通用的静态方法,它可以为一个图像添加任意宽度和颜色的frame,并返回一个ColorTransform对象
+* 9. 编写一个方法 lexicographicComparator(String... args),返回根据指定顺序对字段进行比较的比较器。例如, lexicographicComparator("lastname",
+"firstname")会通过反射获取两个对象lastname字段的值。如果这两个值不同,则返回两者的差距,否则继续检查firstname字段。如果所有字段都想等,则返回0
+* 10. 为什么不能像下面这样调用:
+      UnaryOperator op = Color::brighter;
+      Image finalImage = transform(image, op.compose(Color::grayscale));
+     请注意观察 UnaryOperator<T> 对象 compose 方法的返回类型。为什么它不适用于 transform 方法?如何在函数组合中使用可推断的类型和需要显式声明的类型。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

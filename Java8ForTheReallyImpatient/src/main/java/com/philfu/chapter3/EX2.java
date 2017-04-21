@@ -2,6 +2,8 @@ package com.philfu.chapter3;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.Test;
+
 import com.philfu.Exercise;
 
 /**
@@ -9,6 +11,7 @@ import com.philfu.Exercise;
  */
 public class EX2 implements Exercise {
     @Override
+    @Test
     public void perform() {
         withLock(new ReentrantLock(), () -> System.out.println("some locked action"));
     }

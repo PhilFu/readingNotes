@@ -79,8 +79,12 @@ Stream 是lazy的,无法判断?
       UnaryOperator op = Color::brighter;
       Image finalImage = transform(image, op.compose(Color::grayscale));
      请注意观察 UnaryOperator<T> 对象 compose 方法的返回类型。为什么它不适用于 transform 方法?如何在函数组合中使用可推断的类型和需要显式声明的类型。
-
-
+* 11. 实现可以组合两个 ColorTransformer 对象的静态方法,以及可以讲一个 UnaryOperator<Color> 对象转换为 ColorTransformer
+对象（忽略x和y坐标）的静态方法。然后使用这些方法给一个明亮的图片添加一个灰色的frame。
+* 12. 改进第3.6节中的 LatentImage 类,使它可以同时支持 UnaryOperator<Color> 和 ColorTransformer 类型。提示:将前者适配为后者
+* 13. 像模糊或者边缘检测等convolution滤镜,会根据相邻的像素来计算当前像素。要模糊一个图像,需要将每个颜色值都替换为自身及周围8个像素的平均值。对于边缘检测来说,则要每个颜色值c替换为
+      4c - n - e - s - w,其中的其他颜色分别是上、下、左、右4个方向的像素。注意,由于他们需要之前阶段中已经计算出的图像（或者至少是相邻的像素）,所以这些不可能通过3.6节中的方法
+       延迟计算。 请你改进延迟图像的处理过程,使其能够支持这些操作。当执行其中一个操作时,强制计算上一阶段。
 
 
 

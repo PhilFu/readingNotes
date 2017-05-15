@@ -11,6 +11,7 @@
     <modules>
         <module>Java8ForTheReallyImpatient</module>
         <module>SevenConcurrencyModelsInSevenWeeks</module>
+        <module>desiginPattern</module>
     </modules>
 
     <properties>

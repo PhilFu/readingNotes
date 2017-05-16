@@ -8,5 +8,9 @@ public class Client {
         Soldier sanMao = new Soldier();
         sanMao.setGun(new Rifle());
         sanMao.killEnemy();
+
+        Snipper siMao = new Snipper();
+        siMao.setRifle(new AUG());
+        siMao.killEnemy();
     }
 }

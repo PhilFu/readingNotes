@@ -19,7 +19,7 @@ public class Client {
         f.doSomething(map);
     }
 
-    // 运行结果一样。如果想让子类的方法运行,就必须覆写父类的方法。
+    // 运行结果一样, 父类被执行。如果想让子类的方法运行,就必须覆写父类的方法。
     public static void main(String[] args) {
         invoker();
         invoker2();

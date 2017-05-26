@@ -1,4 +1,4 @@
-## 接口隔离的原则
+## ISP: Interface Segregation Principle, 接口隔离的原则
 两种接口:
 > - 实例接口（Object Interface）: 使用 new 关键字产生的一个实例,它是对一个类型的事物描述,是一种接口（Java 中的类也是一种接口）
 > - 类接口（Class Interface）: 使用 interface 关键字定义的接口

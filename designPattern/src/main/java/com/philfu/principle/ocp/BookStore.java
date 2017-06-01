@@ -28,6 +28,7 @@ public class BookStore {
         bookLists.add(new OffNovelBook("悲惨世界", 3500, "雨果"));
         bookLists.add(new OffNovelBook("金瓶梅", 4300, "兰陵笑笑生"));
 
+        bookLists.add(new ComputerBook("Think in Java", "编程语言", "Bruce Eckel", 4300));
     }
 
     public static void main(String[] args) {

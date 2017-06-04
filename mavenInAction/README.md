@@ -55,3 +55,19 @@ Maven在编译项目主代码的时候需要使用一套classpath;编译和执�
 |provided|Y|Y|-|servlet-api|
 |runtime|-|Y|Y|JDBC驱动实现|
 |system|Y|Y|-|本地的,Maven仓库之外的类库文件|
+
+假设A依赖于B, B依赖于C, 则A对于B是第一直接依赖,B对于C是第二直接依赖,A对于C是传递性依赖。
+
+||compile|test|provided|runtime|
+|---|---|---|---|---|
+|compile|compile|-|-|runtime|
+|test|test|-|-|test|
+|provided|provided|-|provided|provided|
+|runtime|runtime|-|-|runtime|
+
+举例来说: account-email有greenmail的直接依赖,这是第一依赖,其范围是test; greenmail又有一个mail的直接依赖,这是第二依赖,其范围是compile;
+mail 是 account-email 的传递性依赖。对照上表可知: 第一依赖是test,第二依赖范围是compile时,传递性依赖的范围是test。
+> - 当第二直接依赖范围是compile时,传递性依赖的范围与第一直接依赖的范围一致;
+> - 当第二直接依赖范围是test时,依赖不会被传递
+> - 当第二直接依赖范围是provided时,只传递第一直接依赖范围也为provided的依赖,且传递性依赖范围同样为provided
+> - 当第二直接依赖范围是runtime时,传递性依赖的范围与第一直接依赖的范围一致,但compile例外,此时传递性依赖的范围为compile

@@ -39,6 +39,8 @@ POM: Project Object Model,项目对象模型。Maven可以使项目对象模型�
   ...
 </project>
 ```
+
+### 依赖范围
 Maven在编译项目主代码的时候需要使用一套classpath;编译和执行测试的时候会使用另外一套classpath;实际运行Maven项目的时候,又会使用一套classpath。
 依赖范围就是用来控制依赖与这三种classpath的关系。
 - compile: 编译。**默认值**,对于编译、测试、运行三种classpath都有效,都需要使用该依赖。
@@ -56,6 +58,7 @@ Maven在编译项目主代码的时候需要使用一套classpath;编译和执�
 |runtime|-|Y|Y|JDBC驱动实现|
 |system|Y|Y|-|本地的,Maven仓库之外的类库文件|
 
+### 依赖传递
 假设A依赖于B, B依赖于C, 则A对于B是第一直接依赖,B对于C是第二直接依赖,A对于C是传递性依赖。
 
 ||compile|test|provided|runtime|
@@ -71,3 +74,40 @@ mail 是 account-email 的传递性依赖。对照上表可知: 第一依赖是t
 > - 当第二直接依赖范围是test时,依赖不会被传递
 > - 当第二直接依赖范围是provided时,只传递第一直接依赖范围也为provided的依赖,且传递性依赖范围同样为provided
 > - 当第二直接依赖范围是runtime时,传递性依赖的范围与第一直接依赖的范围一致,但compile例外,此时传递性依赖的范围为compile
+
+### 依赖调解
+假设A有这样的依赖关系: A -> B -> C -> X(1.0), A -> D -> X(2.0), X是A的传递依赖,但有两个版本。
+Maven依赖调解(Dependency Mediation)的原则:
+> - 路径最近者优先。 X(1.0) 比 X(2.0)的路径长, 因此 X(2.0) 会被解析使用
+> - 第一声明优先。 在依赖路径长度相同的前提下, 在 POM 中依赖声明的顺序决定了睡会被先解析使用,顺序最靠前的优胜。
+
+### 可选依赖
+假设有这样的依赖关系: A 依赖于 B, B 依赖于 X 和 Y。 B 对于 X 和 Y 的依赖都是可选依赖。
+根据依赖传递的定义,如果这三个依赖范围都是 compile, 那么 X,Y 就是 A 的 compile 范围传递依赖。但如果 X 和 Y 是可选依赖,依赖不会被传递, X, Y 不会对 A 有任何影响
+> 为什么需要可选依赖? 项目 B 可能实现了两个特性, 其中一个特性依赖于 X, 另一个特性依赖于 Y, 而且这两个特性是互斥的,用户不可能同时使用两个特性。
+比如 B 是一个持久层隔离工具包,支持多种数据库,MySql、Oracle等,在构建这个工具包时,需要这两种数据库的驱动程序,但是在使用这个工具包的时候,只依赖一种数据库。
+当项目 A 依赖于 B 的时候,如果 A 实际使用 MySql 数据库,那么在 A 的POM中要显示声明对MySql的依赖。
+
+> 理想情况下,**不要使用可选依赖**。使用可选依赖的原因是项目实现了多个特性,但这违反了单一职责原则,更好的做法是为MySql和Oracle分布创建一个 Maven 项目。
+
+### 排除依赖
+依赖传递会隐式引入很多依赖,极大的简化项目依赖的管理,但可能会带来问题。如果项目有一个依赖,该依赖由于某些原因依赖了另一个类库的 SNAPSHOT 版本,
+那么这个 SNAPSHOT 就会成为当前项目的传递依赖, 直接影响到当前项目。需要排除掉该 SNAPSHOT, 并且声明该类库的某个正式版本
+```
+<dependency>
+  <groupId>com.philfu.mavenInAction</groupId>
+  <artifactId>project-a</artifactId>
+  <version>1.0.1</version>
+  <exclusions>
+    <exclusion>
+      <groupId>com.philfu.mavenInAction</groupId>
+      <artifactId>project-b</artifactId>
+    </exclusion>
+  </exclusions>
+  <dependency>
+    <groupId>com.philfu.mavenInAction</groupId>
+    <artifactId>project-b</artifactId>
+    <version>1.1.0</version
+  </dependency>
+</dependency>
+```

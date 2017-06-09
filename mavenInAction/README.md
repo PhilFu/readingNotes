@@ -98,16 +98,36 @@ Maven依赖调解(Dependency Mediation)的原则:
   <groupId>com.philfu.mavenInAction</groupId>
   <artifactId>project-a</artifactId>
   <version>1.0.1</version>
-  <exclusions>
+  <exclusions>                  <!--使用exclusions排除依赖-->
     <exclusion>
       <groupId>com.philfu.mavenInAction</groupId>
       <artifactId>project-b</artifactId>
     </exclusion>
   </exclusions>
-  <dependency>
+  <dependency>                  <!--显示声明对b的依赖-->
     <groupId>com.philfu.mavenInAction</groupId>
     <artifactId>project-b</artifactId>
     <version>1.1.0</version
   </dependency>
 </dependency>
 ```
+> 声明 exclusion 的时候,只需要 groupId 和 artifactId, 而不需要 version 元素。原因:依赖调解, 只能存在一个依赖
+
+### 归类依赖
+使用 <properties> 定义全局变量, 归类管理版本,例如 springframework
+
+### 优化依赖
+Maven 会自动解析所有项目的直接依赖和传递依赖,并根据规则正确判断每个依赖的范围,对于依赖冲突,也能进行依赖调解,确保任何一个构建只有唯一的版本在依赖中存在。
+在这些工作之后,最后得到的依赖称为**已解析依赖**(Resolved Dependency)。
+将当前项目 pom 声明的依赖称为顶层依赖,这些顶层依赖的依赖成为第二层依赖,依次类推,有第三层、第四层依赖。这些依赖经 Maven 解析后,会构成一棵树。
+这棵依赖树能很清楚的看到所有依赖是通过哪条传递路径引入的。
+```
+mvn dependency:list     该命令可查看当前项目的已解析依赖, 包括依赖的范围
+mvn dependency:tree     该命令可以查看当前项目的依赖树
+mvn dependency:analyze  该命令可以帮助分析当前项目的依赖(需编译项目)
+```
+依赖分析结果中有两项很重要:
+> - Used undeclared dependencies: 指项目中使用到的,但是没有显示声明的依赖。这种依赖意味着风险,这种依赖是通过直接依赖传递进来的,
+当直接依赖升级时,传递依赖也会发生变化,可能导致项目出错。这种隐藏的威胁一旦出现,需要耗费大量时间来查明真相。因此,显示声明任何项目中直接用到的依赖。
+> - Unused declared dependencies: 指项目中未使用的,但是显示声明的依赖。对于这一类依赖,不要简单的直接删除。
+dependency:analyze 只会分析**编译**主代码和测试代码需要用到的依赖, 而**执行**测试和**运行时**需要的依赖就发现不了。

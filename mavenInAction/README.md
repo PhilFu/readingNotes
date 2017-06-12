@@ -128,6 +128,205 @@ mvn dependency:analyze  该命令可以帮助分析当前项目的依赖(需编�
 ```
 依赖分析结果中有两项很重要:
 > - Used undeclared dependencies: 指项目中使用到的,但是没有显示声明的依赖。这种依赖意味着风险,这种依赖是通过直接依赖传递进来的,
-当直接依赖升级时,传递依赖也会发生变化,可能导致项目出错。这种隐藏的威胁一旦出现,需要耗费大量时间来查明真相。因此,显示声明任何项目中直接用到的依赖。
+当直接依赖升级时,传递依赖也会发生变化,可能导致项目出错。这种隐藏的威胁一旦出现,需要耗费大量时间来查明真相。因此,显示声明任何项目中**直接**用到的依赖。
 > - Unused declared dependencies: 指项目中未使用的,但是显示声明的依赖。对于这一类依赖,不要简单的直接删除。
 dependency:analyze 只会分析**编译**主代码和测试代码需要用到的依赖, 而**执行**测试和**运行时**需要的依赖就发现不了。
+
+## 仓库
+在 Maven 中,任何一个依赖、插件或者项目的输出都称为构件。坐标和依赖是任何一个构件在 Maven 中的逻辑表示方式, 物理表示方式是文件。
+Maven 通过**仓库**来统一管理这些文件, 路径与坐标的对应关系为: groupId/artifactId/version/artifactId-version.packaging
+```
+Maven 处理仓库布局的源码
+private static final char PATH_SEPARATOR = '/';
+private static final char GROUP_SEPARATOR = '.';
+private static final char ARTIFACT_SEPARATOR = '-';
+
+public String pathOf(Artifact artifact) {   // 根据构件信息生成其在仓库中的路径
+    ArtifactHandler artifactHandler = artifact.getArtifactHandler();
+    StringBuilder path = new StringBuilder(128);
+
+    path.append(formatDirectory(artifact.getGroupId())).append(PATH_SEPARATOR);
+    path.append(artifact.getArtifactId()).append(PATH_SEPARATOR);   // 可以看出 artifactId 只有一个字段,没有'.'
+    path.append(artifact.getBaseVersion()).append(PATH_SEPARATOR);  // baseVersion 是为 SNAPSHOT 版本服务的 1.0-SNAPSHOT, baseVersion是1.0
+    path.append(artifact.getArtifactId()).append(ARTIFACT_SEPARATOR).append(artifact.getVersion());
+
+    if (artifact.hasClassifier()) {
+        path.append(ARTIFACT_SEPARATOR).append(artifact.getClassifier());
+    }
+
+    // extension是从 artifactHandler 获取的, artifactHandler是由项目的 packaging 决定的, 因此 packaging 决定了构件的扩展名
+    if (artifactHandler.getExtension() != null && artifactHandler.getExtension().length > 0) {
+        path.append(GROUP_SEPARATOR).append(artifactHandler.getExtension());
+    }
+
+    return path.toString();
+}
+
+private String formatAsDirectory(String directory) {
+    return directory.replace(GROUP_SEPARATOR, PATH_SEPARATOR);
+}
+```
+
+### 仓库的分类
+Maven 仓库分为本地仓库和远程仓库(中央仓库,私服,其他公共库)。当 Maven 根据坐标寻找构件的时候,会先查找本地仓库,如果存在则直接使用;如果不存在,
+或者需要查看是否有更新的版本, Maven 会去远程仓库查找,发现需要的构件后,下载到本地仓库再使用。如果本地仓库和远程仓库都没有, Maven 会报错。
+
+#### 本地仓库
+Maven 项目中没有 lib/ 这样用来存放依赖文件的目录, 执行编译或测试时, 总是基于坐标使用本地仓库中的依赖文件。
+默认每个用户在自己的目录下有个 .m2/repository/ 的仓库目录, 如果想要自定义本地仓库目录, 可以编辑 .m2/setting.xml 文件
+默认是不存在 .m2/setting.xml 的, 需要从 Maven 的安装目录复制 $M2_HOME/con/setting.xml 然后在进行编辑, 不推荐修改全局 setting.xml 文件
+```
+<setting>
+    <localRepository>D:\java\repository</localRepository>
+</setting>
+```
+将本地项目的构件安装到 Maven 仓库中, 执行 **mvn clean install** 命令, install 插件的 install 目标是将项目的构件输出文件安装到本地仓库。
+
+#### 远程仓库
+每个用户只有一个本地仓库,但可以配置访问很多远程仓库
+
+##### 中央仓库
+中央仓库[http://repo1.maven.org/maven2](http://repo1.maven.org/maven2)是一个默认的远程仓库, Maven 按照文件中自带了中央仓库的配置。
+位于: $M2_HOME/lib/maven-model-builder-3.0.jar 中, 目录 org/apache/maven/model/pom-4.0.0.xml
+
+##### 私服
+私服代理广域网上的远程仓库,供局域网内的 Maven 用户使用。需要下载构件时,从私服请求;如果私服上不存在,则从外部远程仓库下载,缓存在私服上。
+即使可以直连Internet,也需要建立私服,原因:
+> - 节省外网带宽。对外的重复构件下载被消除,降低外网带宽的压力
+> - 加速 Maven 构建。Maven 的一些机制(如快照更新检查等),要求 Maven 在执行构建的时候不停的检查远程仓库数据,如果配置很多外部远程仓库,构建速度会大大降低
+> - 部署第三方构件。某些构件无法从任何一个外部远程仓库获得,如组织内部生成的私有构件、Oracle的JDBC驱动由于版权因素不能发布到公共仓库中
+> - 提高稳定性,增强控制。如果使用远程仓库,当Internet不稳定,Maven构建也会不稳定,甚至无法构建。一些私服软件(如Nexus)还提供了权限管理等高级控制功能
+> - 降低中央仓库的负荷。
+
+#### 远程仓库配置
+```
+<project>
+  <repositories>    <!--可以配置多个远程仓库-->
+    <repository>
+      <id>jboss</id>    <!--id必须唯一,中央仓库id为central,可以使用该id覆盖中央仓库的配置-->
+      <name>JBoss Repository</name>
+      <url>http://repository.jboss.com/maven2</url> <!--url基于http协议,可以直接在浏览器中打开浏览构件-->
+      <releases>
+        <enabled>true</enabled>     <!--下载发布版的构件-->
+        <updatePolicy>daily</updatePolicy>  <!--每天从远程仓库检查更新, never-从不;always-每次构建;interval:X-每隔X分钟-->
+        <checksumPolicy>ignore</checksumPolicy> <!--下载构件时,maven会验证校验和文件,失败时策略:warn-输出警官;fail:构建失败;ignore:忽略-->
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>    <!--不下载快照版的构件-->
+      </snapshots>
+      <layout>default</layout>      <!--仓库布局是maven2及maven3的默认布局-->
+    </repository>
+  </repositories>
+</project>
+```
+
+##### 远程仓库的认证
+仓库信息可以配置在 POM 文件中,但认证信息必须配置在 setting.xml 中,因为 POM 会被提交到仓库中供所有人访问,setting.xml 则存放在本机
+```
+<settings>
+  <servers>
+    <server>
+      <id>my-proj</id>      <!--id必须与 POM 中需要认证的 repository 元素的 id 完全一致-->
+      <username>repo-user</username>
+      <password>repo-pwd</password>
+    </server>
+  </servers>
+</settings>
+```
+
+##### 部署到远程仓库
+执行 **mvn clean deploy**, Maven 会将构建输出部署到对应的远程仓库
+```
+<project>
+  <distributionManagement>
+    <repository>        <!--发布构件的仓库-->
+      <id>proj-release</id>
+      <name>Proj Release Repository</name>
+      <url>http://192.168.1.100/content/repositories/proj-releases</url>
+    </repository>
+    <snapshotRepository>    <!--快照版本的仓库-->
+      <id>proj-snapshots</id>
+      <name>Proj Snapshot Repository</name>
+      <url>http://192.168.1.100/content/repositories/proj-snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+</project>
+```
+
+### 快照版本
+假设小张开发模块A的2.1版本,小李开发模块B,B的功能依赖于A。如何协同开发?
+- 小李checkout模块A的源码进行构建, 效率太低
+- 重复部署模块A的2.1版本。虽然小张能保证仓库中的构件是最新的,但是同样的版本和同样的坐标意味着同样的构件, 小李每次构件时,需要清除本地仓库才能更新
+- 不停的更新版本 2.1.1, 2.1.2, 2.1.3。小张和小李都需要频繁更改版本号,其次大量版本其实仅包含了微小的差异,是对版本号的滥用。
+
+Maven 快照就是解决上述问题。小张只需要将模块A的版本设定为2.1-SNAPSHOT, 发布到私服中,发布时Maven会自动为构件打上时间戳。
+如 2.1-20161214.221414-13表示2016年12月14日22点14分14秒的第13次快照
+小李配置对模块2.1-SNAPSHOT的依赖, 当他构建模块B时, Maven会自动从仓库中检查模块A的2.1-SNAPSHOT的最新构件,有更新时会下载
+Maven默认每天检查一次(由updatePolicy控制), 也可以使用命令 -U 强制更新, 如 mvn clean install -U
+当项目经过完善的测试后需要发布版本时,将快照版本更改为发布版本, 将2.1-SNAPSHOT改为2.1, 表示该版本已经稳定。
+
+### 从仓库解析依赖机制
+1. 当依赖范围是 system 的时候, Maven 直接从本地文件系统解析构件。
+2. 根据依赖坐标计算仓库路径后, 尝试从本地仓库寻找构件, 如果发现相应的构件, 则解析成功
+3. 在本地仓库不存在相应构件的情况下, 如果依赖的版本是显式的发布构件版本, 如1.2、 2.1-beta-1等, 则遍历所有远程仓库, 发现后下载并使用。
+4. 如果依赖的版本是 RELEASE 或者 LATEST, 则基于更新策略读取所有远程仓库的元数据 groupId/artifactId/maven-metadata.xml, 将其与本地仓库的对应元数据合并,
+计算出 RELEASE 或者 LATEST 真实的值, 然后基于这个真实的值检查本地和远程仓库, 如步骤2,3.
+5. 如果依赖的版本是 SNAPSHOT, 则基于更新策略读取所有远程仓库的元数据 groupId/artifactId/version/maven-metadata.xml, 将其与本地仓库的对ing元数据合并,
+得到最新快照版本的值, 然后基于该值检查本地仓库, 或者从远程仓库下载
+6. 如果最后解析得到的构件版本是时间戳的快照, 如 1.4.1-20091104.121450-121, 则复制其时间戳格式的文件至非时间戳格式, 如 SNAPSHOT, 并使用该非时间戳格式的构件。
+```
+<metadata>
+  <groupId>org.sonatype.nexus</groupId>
+  <artifactId>nexus</artifactId>
+  <versioning>
+    <latest>1.4.2-SNAPSHOT</latest>
+    <release>1.4.0</release>
+    <versions>
+      <version>1.3.5</version>
+      <version>1.3.6</version>
+      <version>1.4.0-SNAPSHOT</version>
+      <version>1.4.0</version>
+      <version>1.4.0.1-SNAPSHOT</version>
+      <version>1.4.2-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20161214221557</lastUpdated>
+  </versioning>
+</metadata>
+```
+maven-metadata.xml 列出了仓库中存在的该构件的所有可用版本, 同时 latest 元素指向这些版本中的最新版本, release 元素指向了这些版本中最新的发布版本。
+Maven 通过合并多个远程仓库及本地仓库的元数据, 就能计算出基于所有仓库的 latest 和 release 分别是什么, 然后再解析出具体的构件。
+不推荐在依赖中使用 LATEST 和 RELEASE, 因为 Maven 随时可能解析到不同的构件, 并且不会明确高速用户这样的变化, 当这种变化导致构建失败时, 很难发现问题。
+```
+<metadata>
+  <groupId>org.sonatype.nexus</groupId>
+  <artifactId>nexus</artifactId>
+  <version>1.4.2-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <timestamp>20161214.221414</timestamp>  <!--快照版本的时间戳-->
+      <buildNumber>13</buildNumber>        <!--快照版本的构建号-->
+    <snapshot>
+    <lastUpdated>20161214221558</lastUpdated>
+  </versioning>
+</metadata>
+```
+
+### 镜像
+如果仓库 X 可以提供仓库 Y 存储的所有内容, 那么可以认为 X 是 Y 的一个镜像。由于地理位置因素, 镜像往往比中央仓库更快的服务。
+镜像完全屏蔽了被镜像仓库, 当镜像不稳定或者停止服务时, Maven 无法访问镜像仓库, 则会无法下载构件
+```
+<settings>
+  <mirrors>
+    <mirror>
+      <id>maven.net.cn</id>
+      <name> one of the central mirrors in China</name>
+      <url>http://maven.net.cn/content/groups/public</url>
+      <mirrorOf>central</mirrorOf>  <!--表明是中央仓库的镜像, 任何对中央仓库的请求都会转至该镜像-->
+      <mirrorOf>*</mirror>  <!--对任何远程仓库的请求都会被转移至该仓库, 配置私服时常用-->
+      <mirrorOf>external:*</mirror>  <!--匹配所有远程仓库, 使用 localhost 的除外, 使用 file:// 协议的除外-->
+      <mirrorOf>repo1,repo2</mirror>  <!--匹配 repo1 和 repo2, 使用逗号分割多个远程仓库-->
+      <mirrorOf>*,!repo1</mirror> <!--匹配所有远程仓库, repo1 除外, 使用!将仓库从匹配中排除-->
+    </mirror>
+  </mirrors>
+</settings>
+```

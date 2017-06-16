@@ -330,3 +330,128 @@ Maven 通过合并多个远程仓库及本地仓库的元数据, 就能计算出
   </mirrors>
 </settings>
 ```
+
+## 生命周期和插件
+Maven 日常使用中, 命令行的输入往往就对应了生命周期, 如 mvn package 就表示执行默认生命周期阶段 package.
+Maven 的生命周期是抽象的, 其实际行为是由插件完成, 如 package 阶段的任务可能就会由 maven-jar-plugin 完成。
+
+### 生命周期
+Maven 总结了一套完善的、易扩展的声明周期, 包括: 项目的清理、初始化、编译、测试、打包、集成测试、验证、部署、站点生成。几乎所有项目的构建, 都能映射到这样一个生命周期上。
+Maven 的生命周期是抽象的,意味着生命周期本身不做任何实际的工作, 都交由插件来完成（模板方法模式),而且 Maven 为大多数构建步骤编写并绑定了默认插件。
+
+#### Maven 的三套生命周期
+Maven 拥有三套相互独立的生命周期, 分别是: clean, default, site.每个生命周期都包含一些阶段(phase),这些阶段是有顺序的,并且后面的阶段依赖于前面的阶段
+
+##### clean: 清理项目
+- pre-clean: 执行一些清理前需要完成的工作
+- clean: 清理上一次构建生成的文件
+- post-clean: 执行一些清理后需要完成的工作
+
+##### default: 构建项目
+- validate
+- initialize
+- generate-sources
+- process-sources: 处理项目主资源目录。对 src/main/resources 目录的内容进行变量替换等工作后, 复制到项目输出的主 classpath 目录中。
+- generate-resources
+- process-resources
+- compile: 编译项目的主源码。 编译 src/main/java 目录下的 Java 文件至项目输出的主 classpath 目录中
+- process-classes
+- generate-test-sources
+- process-test-sources: 处理项目测试资源文件。 对 src/test/resources 目录的内容进行变量替换等工作, 复制到项目输出的测试 classpath 目录中
+- generate-test-resources
+- process-test-resources
+- test-compile 编译项目的测试代码。 编译 src/test/java 目录下的 Java 文件至项目输出的测试 classpath 目录中
+- process-test-classes
+- test: 使用单元测试框架运行测试, 测试代码不会被打包或部署。
+- prepare-package
+- package: 接受编译好的代码, 打包成可发布的格式, 如 jar
+- pre-integration-test
+- integration-test
+- post-integration-test
+- verify
+- install: 将包安装到 Maven 本地仓库, 供本地其他 Maven 项目使用
+- deploy: 将最终包复制到远程仓库, 供其他开发人员和 Maven 项目使用
+
+##### site: 建立和发布项目站点
+- pre-site: 执行一些在生成项目站点之前需要完成的工作
+- site: 生成项目站点文件
+- post-site: 执行一些在生成项目站点之后需要完成的工作
+- site-deploy: 将生成的项目站点发布到服务器上
+
+##### 命令行与生命周期
+- mvn clean: 调用 clean 生命周期的 clean 阶段, 实际执行的阶段为 clean 生命周期的 pre-clean 和 clean 阶段
+- mvn test: 调用 default 生命周期的 test 阶段, 实际执行的阶段为 default 生命周期的 validate 直到 test 所有阶段。(因此会编译)
+- mvn clean install: 调用 clean 生命周期的 clean 阶段和 default 生命周期的 install 阶段, 实际执行 clean 生命周期的 pre-clean, clean 阶段,
+以及 default 生命周期的从 validate 到 install 的所有阶段。该命令结合了两个生命周期
+- mvn clean deploy site-deploy: 调用 clean 生命周期的 clean 阶段、default 生命周期的 deploy 阶段, 以及 site 生命周期的 site-deploy 阶段。
+实际执行的阶段为 clean 生命周期的 pre-clean, clean 阶段, default 生命周期的所有阶段, 以及 site 生命周期的所有阶段。
+
+### 插件
+插件目标(Plugin Goal): Maven定义了抽象的生命周期,具体任务交由插件完成。但每个任务编写一个插件并不可取,因为任务背后有很多可复用的代码。
+因此插件往往能完成多个功能, 每个功能就是一个插件目标。 maven-dependency-plugin 有十多个目标,每个目标对应一个功能
+> - dependency:analyze 分析项目依赖, 帮助找到潜在的无用依赖
+> - dependency:tree 列出项目依赖树, 帮助分析依赖来源
+> - dependency:list 列出项目所有已解析的依赖
+
+冒号前面是插件前缀, 冒号后面是该插件的目标。 类似的 compiler:compile, surefire:test
+
+#### 插件绑定
+Maven 生命周期的阶段与插件的目标项目绑定, 以完成某个具体的构建任务。
+如项目编译, 对应了 default 生命周期的 compile 阶段, maven-compiler-plugin 插件的 compile 目标能完成该任务, 将他们绑定, 就能实现项目编译。
+
+##### 内置绑定
+为了让用户不用任何配置就能构建 Maven 项目, Maven 为主要的生命周期绑定了很多插件目标, 用户通过命令行调用声明周期阶段时, 对应的插件目标就会执行响应的任务。
+
+clean 生命周期
+|生命周期阶段|插件目标|
+|---|---|
+|pre-clean||
+|clean|maven-clean-plugin:clean|
+|post-clean||
+
+site 声明周期
+|生命周期阶段|插件目标|
+|---|---|
+|pre-site||
+|site|maven-site-plugin:site|
+|post-site||
+|site-deploy|maven-site-plugin:deploy|
+
+deploy 生命周期, 项目打包类型会影响构件的具体过程, deault 声明周期的阶段与插件目标的绑定关系由项目的打包类型(packaging)决定。jar包如下:
+|生命周期阶段|插件目标|执行任务|
+|---|---|---|
+|process-resources|maven-resource-plugin:resources|复制主资源文件至主输出目录|
+|compile|maven-compiler-plugin:compile|编译主代码至主输出目录|
+|process-test-resources|maven-resources-plugin:testResources|复制测试资源文件至测试输出目录|
+|test-compile|maven-compiler-plugin:testCompile|编译测试代码至测试输出目录|
+|test|maven-surefire-plugin:test|执行测试用例|
+|package|maven-jar-plugin:jar|创建项目jar包|
+|install|maven-install-plugin:install|将项目输出构件安装到本地仓库|
+|deploy|maven-deploy-plugin:deploy|将项目输出构件部署到远程仓库|
+
+##### 自定义绑定
+```
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-source-plugin</artifactId>
+      <version>2.1.1</version>
+      <executions>
+        <execution>
+          <id>attach-sources</id>
+          <phase>verify</phase>     <!--执行verify生命周期阶段时, maven-source-plugin:jar-no-fork会得以执行-->
+          <goals>
+            <goal>jar-no-fork</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+```
+删除上面的 <phase>verify</phase> 插件目标仍能执行,原因: 很多插件的目标在编写时已经定义了默认绑定阶段。查看插件详细信息,了解默认绑定阶段
+```
+mvn help:describe-Dplugin=org.apache.maven.plugins:maven-source-plugin:2.1.1-Ddetail
+```
+多个目标被绑定到统一阶段, 这些插件声明的先后顺序决定了目标的执行顺序

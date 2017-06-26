@@ -455,3 +455,163 @@ deploy 生命周期, 项目打包类型会影响构件的具体过程, deault �
 mvn help:describe-Dplugin=org.apache.maven.plugins:maven-source-plugin:2.1.1-Ddetail
 ```
 多个目标被绑定到统一阶段, 这些插件声明的先后顺序决定了目标的执行顺序
+
+#### 插件配置
+Maven 插件的目标有一些可配置的参数
+
+##### 命令行插件配置
+可以在 Maven 命令中使用 -D 参数,并伴随一个 参数键=参数值 的形式,来配置插件目标的参数
+```
+mvn install -Dmaven.test.skip=true  ## -D 是 Java 自带的, 功能是通过命令行设置一个Java系统属性, Maven简单的重用了该参数
+```
+
+##### POM 中插件全局配置
+全局的配置,所有基于该插件目标的任务,都会使用这些配置
+```
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>2.1</version>
+      <configuration>         <!--不管是绑定到 compile 阶段的 maven-compiler-plugin:compile 任务-->
+        <source>1.5</source>  <!--还是绑定到 test-compiler 阶段的 maven-compiler-plugin:testCompiler 任务-->
+        <target>1.5</target>  <!--都能使用该配置,基于 1.5 版本进行编译-->
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+```
+
+##### POM中插件任务配置
+除了为插件配置全局的参数, 还可以为某个插件任务配置特定的参数
+```
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-antrun-plugin</artifactId>
+      <version>1.3</version>
+      <executions>
+        <execution>
+          <id>ant-validate</id>
+          <phase>validate</phase>
+          <goals>
+            <goal>run</goal>
+          </goals>
+          <configuration>       <!--configuration位于executions下,而非plugin下。表明这是特定任务的配置-->
+            <tasks>
+              <echo>I'm bound to validate phase.</echo>
+            </tasks>
+          </configuration>
+        </execution>
+        <execution>
+          <id>ant-verify</id>
+          <phase>verify</phase>
+          <goals>
+            <goal>run</goal>
+          </goals>
+          <configuration>
+            <tasks>
+              <echo>I'm bound to verify phase.</echo>
+            </tasks>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+```
+
+#### 获取插件信息
+```
+mvn help:describe -Dplugin=org.apache.maven.plugins:maven-compiler-plugin:2.1
+mvn help:describe -Dplugin=org.apache.maven.plugins:maven-compiler-plugin   ## 获取最新版本的描述
+mvn help:describe -Dplugin=compiler     ## 使用 Goal Prefix 代替坐标
+mvn help:describe -Dplugin=compiler -Dgoal=compile      ## 仅描述指定的目标
+mvn help:describe -Dplugin=compiler -Ddetail    ## 详细信息
+```
+Goal Prefix的作用:方便在命令行直接运行插件
+
+#### 从命令行调用插件
+```
+mvn -h     # 输出 usage: mvn [options] [<goal(s)>] [<phase(s)>]
+```
+该命令告诉了mvn命令的基本用法, options 表示可用的选项, goals 指插件目标, phases 指生命周期阶段。
+可以通过 mvn 命令激活生命周期阶段,从而执行绑定在生命周期阶段上的插件目标。Maven 还支持直接在命令行调用插件目标,因为有些任务不适合绑定在生命周期上。
+例如 maven-help-plugin:describe, 不需要在构建项目的时候去描述插件信息; maven-dependency-plugin:tree,不需要构建时显示依赖树
+因此这些命令需要通过如下方式使用
+```
+mvn help:describe -Dplugin=compiler     ## help 是 maven-help-plugin 的目标前缀
+mvn dependency:tree     ## dependency 是 maven-dependency-plugin 的前缀
+```
+
+#### 插件解析机制
+Maven 不需要用户提供完整的插件坐标信息,就可以解析到正确的插件, 这是一把双刃剑, 简化了插件的使用和配置, 但很难定位到出问题的插件
+
+##### 插件仓库
+和依赖一样,插件同样基于坐标存储在 Maven 仓库中, Maven会区别对待依赖的远程仓库和插件的远程仓库。
+前面配置的远程仓库只对依赖有效。当 Maven 需要的依赖在本地仓库找不到时,会去配置的远程仓库找;当插件在本地仓库不存在时,不会去这些远程仓库找
+不同于 repositories 及其 repository 子元素, 插件的远程仓库使用 pluginRepositories 和 pluginRepository 配置
+```
+maven 内置的插件远程仓库
+<pluginRepositories>
+  <pluginRepository>
+    <id>central</id>
+    <name>Maven Plugin Repository</name>
+    <url>http://repo1.maven.org/maven2</url>
+    <layout>default</layout>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+    <release>
+      <updatePolicy>never</updatePolicy>
+    </release>
+  </pluginRepository>
+</pluginRepositories>
+```
+
+##### 插件的默认groupId
+如果插件是 Maven 的官方插件（groupId 为 org.apache.maven.plugin）,可以省略 groupId 配置
+```
+<build>
+  <plugins>
+    <plugin>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>2.1</version>
+      <configuration>
+        <source>1.5</source>
+        <target>1.5</target>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+```
+
+##### 解析插件版本
+用户没有提供插件版本的情况下, maven 会自动解析插件版本。Maven 在超级POM中会所有核心插件设定了版本,即使不加任何配置,核心插件的版本就确定了。
+如果用户使用某个插件没有设定版本,同时该插件又不是核心插件, Maven 会检查所有仓库中的可用版本, 然后做出选择,将元数据归并,计算出latest和release值。
+Maven2 中会使用 latest, maven3中会使用 release。
+
+##### 解析插件前缀
+```
+<metadata>
+  <plugins>
+    <plugin>
+      <name>Maven Clean Plugin</name>
+      <prefix>clean</prefix>
+      <artifactId>maven-clean-plugin</artifactId>
+    </plugin>
+    <plugin>
+      <name>Maven Compiler Plugin</name>
+      <prefix>compiler</prefix>
+      <artifactId>maven-compiler-plugin</artifactId>
+    </plugin>
+    <plugin>
+      <name>Maven Dependency Plugin</name>
+      <prefix>dependency</prefix>
+      <artifactId>maven-dependency-plugin</artifactId>
+    </plugin>
+  </plugins>
+</metadata>
+```
